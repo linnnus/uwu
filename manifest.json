@@ -1,0 +1,14 @@
+{
+	"manifest_version": 2,
+	"name": "uwupedia",
+	"version": "0.1.0",
+	"description":"Wikipedia is not uwu enough. This extension fixes that.",
+	"permissions": ["<all_urls>"],
+	"content_scripts": [
+		{
+			"js": ["content.js"],
+			"matches": ["<all_urls>"],
+			"run_at": "document_end"
+		}
+	]
+}
