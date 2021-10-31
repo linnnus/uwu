@@ -1,6 +1,10 @@
 /*** General {{{1 ***/
 
-const ignoredElts = ["STYLE", "PRE", "SCRIPT", "CODE"];
+// TODO: this breaks custom text areas like monaco. Could implement some custom
+//       rules to ignore it (maybe certain classes), but it wouldn't be general
+//       enough
+
+const ignoredElts = ["STYLE", "PRE", "SCRIPT", "CODE", "INPUT", "TEXTAREA"];
 
 // walk nodes
 function* walkContentTextNodes(node) {
@@ -88,10 +92,10 @@ const replacements = [
 	[/\bdad\b/gi,         "daddy"],
 	[/\bfather\b/gi,      "daddy"],
 	[/ove\b/g,            "uv"],
-	[/(?<=\w)\!+/gi, () => random(faces.joy)],
-	[/(?<=\w)\?+/gi, () => random(faces.confused)],
-	[/(?<=\w)\,+/gi, () => random(faces.embarassed)],
-	[/(?<=\w)\.+/gi, () => random(faces.sparkles)],
+	[/(?<=\p{L})\!+/gi, () => random(faces.joy)],
+	[/(?<=\p{L})\?+/gi, () => random(faces.confused)],
+	[/(?<=\p{L})\,+/gi, () => random(faces.embarassed)],
+	[/(?<=\p{L})\.+/gi, () => random(faces.sparkles)],
 	[/\b(\w)/gi, (_, m) => (Math.random() < 0.05 ? `${m}-${m}` : m)],
 ];
 
