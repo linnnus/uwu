@@ -1,8 +1,8 @@
 {
 	"manifest_version": 2,
-	"name": "uwupedia",
+	"name": "Uwu web",
 	"version": "0.1.0",
-	"description":"Wikipedia is not uwu enough. This extension fixes that.",
+	"description":"The web is not uwu enough. This extension corrects that.",
 	"permissions": ["<all_urls>"],
 	"content_scripts": [
 		{
