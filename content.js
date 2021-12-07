@@ -92,11 +92,11 @@ const replacements = [
 	[/\bdad\b/gi,         "daddy"],
 	[/\bfather\b/gi,      "daddy"],
 	[/ove\b/g,            "uv"],
-	[/(?<=\p{L})\!+/gi, () => random(faces.joy)],
-	[/(?<=\p{L})\?+/gi, () => random(faces.confused)],
-	[/(?<=\p{L})\,+/gi, () => random(faces.embarassed)],
-	[/(?<=\p{L})\.+/gi, () => random(faces.sparkles)],
-	[/\b(\w)/gi, (_, m) => (Math.random() < 0.05 ? `${m}-${m}` : m)],
+	[/(?<=\p{w})\!+/gi, () => random(faces.joy)],
+	[/(?<=\p{w})\?+/gi, () => random(faces.confused)],
+	[/(?<=\p{w})\,+/gi, () => random(faces.embarassed)],
+	[/(?<=\p{w})\.+/gi, () => random(faces.sparkles)],
+	[/\b(\p{w})/gi, (_, m) => (Math.random() < 0.05 ? `${m}-${m}` : m)],
 ];
 
 const faces = {
