@@ -1,80 +1,83 @@
-/*** General {{{1 ***/
+/////////////// REPLACEMENTS ///////////////
 
-// TODO: this breaks custom text areas like monaco. Could implement some custom
-//       rules to ignore it (maybe certain classes), but it wouldn't be general
-//       enough
 
-const ignoredElts = ["STYLE", "PRE", "SCRIPT", "CODE", "INPUT", "TEXTAREA"];
+function init(node, fn) {
+	// initial run
+	for (const child of walkTextNodes(node))
+		child.nodeValue = fn(child.nodeValue);
 
-// walk nodes
-function* walkContentTextNodes(node) {
-	const walker = document.createTreeWalker(
-		node,
-		NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-		{
-			acceptNode(node) {
-				// ignore these nodes and do not recurse into subtree
-				if (node.tagName && ignoredElts.includes(node.tagName))
-					return NodeFilter.FILTER_REJECT;
+	// create observer
+	const observer = new MutationObserver((mutationList) => {
+		for (const mutation of mutationList) {
+			if (!mutation.addedNodes)
+				continue;
 
-				// do not emit element nodes, but recurse into subtree
-				if (node.nodeType === Node.ELEMENT_NODE)
-					return NodeFilter.FILTER_SKIP;
+			for (const node of mutation.addedNodes) {
+				if (hasIgnoredParentsOrShouldBeIgnored(node))
+					continue;
 
-				return NodeFilter.FILTER_ACCEPT;
-			},
+				if (node.nodeType === Node.TEXT_NODE)
+					node.nodeValue === fn(node.nodeValue);
+				else
+					// TODO: this doesn't set the value correctly
+					for (const childNode of walkTextNodes(node))
+						childNode.nodeValue = fn(childNode.nodeValue);
+			}
 		}
-	);
+	});
 
-	while (walker.nextNode())
-		yield walker.currentNode;
+	// NOTE: should we also subscribe to characterData? it doesn't
+	//       matter for document but for other elements it might
+	observer.observe(node, { childList: true, subtree: true });
 }
 
-function getParents(node) {
-	let parents = [];
+// <noscript> kinda sussy, is it still #text if it's actually used
+const ignored = ["STYLE", "CODE", "PRE", "SCRIPT", "INPUT", "TEXTARE"];
 
-	while (node.parentNode) {
-		parents.push(node.parentNode);
+function walkTextNodes(node) {
+	const walker = document.createTreeWalker(
+		node,
+		NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+		{
+			 acceptNode(node) {
+				 if (node.nodeType === Node.ELEMENT_NODE) {
+					return ignored.includes(node.tagName)
+						? NodeFilter.FILTER_REJECT
+						: NodeFilter.FILTER_SKIP;
+				 } else {
+					 return NodeFilter.FILTER_ACCEPT;
+				 }
+			}
+		},
+		false,
+	);
+
+	// walker.nextNode() skips the first child (as opposed to initializing with
+	// walker.currentNode. this is on purpose as walkTextNodes will be called with document,
+	// which doesn't satisfy accepNode(). therefore, we must skip it since it will be null
+	const nodeList = [];
+	let currentNode = walker.nextNode();
+
+	while(currentNode) {
+		nodeList.push(currentNode);
+		currentNode = walker.nextNode();
+	}
+
+	return nodeList;
+}
+
+function hasIgnoredParentsOrShouldBeIgnored(node) {
+	while (node) {
+		if (ignored.includes(node.tagName))
+			return true;
+
 		node = node.parentNode;
 	}
 
-	return parents;
+	return false;
 }
 
-// apply fn() to every text node under rootNode
-function init(rootNode, fn) {
-	// set up observer for subsequent changes
-	const observer = new MutationObserver((mutationList) => {
-		for (const mutation of mutationList)
-			// we need to check all parents to make sure the text node
-			// isn't part of an ignored element
-			for (const node of mutation.addedNodes) {
-				if (!mutation.addedNodes) continue;
-
-				if (
-					node.nodeType === Node.TEXT_NODE &&
-					!getParents(node).filter(ignoredElts.includes(node))
-				) {
-					node.nodeValue = fn(node.nodeValue);
-				} else {
-					// for other nodes we must iterate their entire
-					// subtree, since it might've been built "outside"
-					// of the dom before being appended.
-					for (const child of walkContentTextNodes(node)) {
-						child.nodeValue = fn(child.nodeValue);
-					}
-				}
-			}
-	});
-	observer.observe(rootNode, { childList: true, subtree: true });
-
-	// initial run of document
-	for (const node of walkContentTextNodes(rootNode)) {
-		node.nodeValue = fn(node.nodeValue);
-	}
-}
-
-/*** Uwu stuff {{{1 ***/
+/////////////// UWU ///////////////
 
 const replacements = [
 	[/(?:r|l)/gi,         "w"],
@@ -119,13 +122,10 @@ function uwuify(text) {
 	return text;
 }
 
+/////////////// INIT ///////////////
+
 // ignore sites with "lang" explicitly set to something other than EN
 // most sites don't set it, which is bad, but whatever
-if (
-	document.documentElement.lang?.startsWith("en") ||
-	!document.documentElement.lang
-) {
+const { lang } = document.documentElement;
+if (lang?.startsWith("en") || !lang)
 	init(document, uwuify);
-}
-
-// vim: ft=javascript noet tw=80 fdm=marker
