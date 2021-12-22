@@ -19,7 +19,6 @@ function init(node, fn) {
 				if (node.nodeType === Node.TEXT_NODE)
 					node.nodeValue === fn(node.nodeValue);
 				else
-					// TODO: this doesn't set the value correctly
 					for (const childNode of walkTextNodes(node))
 						childNode.nodeValue = fn(childNode.nodeValue);
 			}
@@ -35,13 +34,15 @@ function init(node, fn) {
 const ignored = ["STYLE", "CODE", "PRE", "SCRIPT", "INPUT", "TEXTARE"];
 
 function walkTextNodes(node) {
+	console.log("walking", node);
+
 	const walker = document.createTreeWalker(
 		node,
 		NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
 		{
 			 acceptNode(node) {
-				 if (node.nodeType === Node.ELEMENT_NODE) {
-					return ignored.includes(node.tagName)
+				if (node.nodeType === Node.ELEMENT_NODE) {
+					return ignored.includes(node.tagName.toUpperCase())
 						? NodeFilter.FILTER_REJECT
 						: NodeFilter.FILTER_SKIP;
 				 } else {
@@ -68,7 +69,7 @@ function walkTextNodes(node) {
 
 function hasIgnoredParentsOrShouldBeIgnored(node) {
 	while (node) {
-		if (ignored.includes(node.tagName))
+		if (ignored.includes(node.tagName.toUpperCase()))
 			return true;
 
 		node = node.parentNode;
