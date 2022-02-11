@@ -69,7 +69,7 @@ function walkTextNodes(node) {
 
 function hasIgnoredParentsOrShouldBeIgnored(node) {
 	while (node) {
-		if (ignored.includes(node.tagName.toUpperCase()))
+		if (node.tagName && ignored.includes(node.tagName.toUpperCase()))
 			return true;
 
 		node = node.parentNode;
