@@ -3,16 +3,21 @@
 This extension uwuifies the web. It's way harder than it seems.
 
 ## TODO
-* Edit user-visible attributes like `placeholder="..."`
+
+* Edit user-visible attributes like `placeholder="..."` and `label`
 * Fix github (need to match on class)
-* Fix soundcloud `<title>`. It is updated when a new song is played, and then
-  it is not updated., Når titlen opdateres bemærker vi det slet ikke????
-* Fix reddit stylesheets
+* Fix post titles on Reddit. The first few titles are loaded in a weird way.
+  They are initally translated but then they're set back again. This is
+  probably the reactive framework hydrating the DOM.
+* Fix the title on soundcloud. It appears to be setting `document.title`. We
+  most likely need to install a proxy.
 * actual testing. for example:
-	* Inserting a normal node
-	* Modifying a normal node
-	* Inserting a `<code>` (or some other ignored element)
-	* Appending a child to a `<code>`
-	* Inserting a text node under a `<code>`
-	* Modifying a childnode of a `<code>`
+
+  * Inserting a normal node
+  * Modifying a normal node
+  * Inserting a `<code>` (or some other ignored element)
+  * Appending a child to a `<code>`
+  * Inserting a text node under a `<code>`
+  * Modifying a childnode of a `<code>`
+
   This will probably require jsdom or something.
