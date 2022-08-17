@@ -1,7 +1,8 @@
 /////////////// REPLACEMENTS ///////////////
 
-
 function init(node, fn) {
+	console.debug("Starting initial run");
+
 	// initial run
 	for (const child of walkTextNodes(node))
 		child.nodeValue = fn(child.nodeValue);
@@ -13,8 +14,10 @@ function init(node, fn) {
 				continue;
 
 			for (const node of mutation.addedNodes) {
-				if (hasIgnoredParentsOrShouldBeIgnored(node))
+				if (hasIgnoredParentsOrShouldBeIgnored(node)) {
+					console.debug("has ignored parent: %o", node);
 					continue;
+				}
 
 				if (node.nodeType === Node.TEXT_NODE)
 					node.nodeValue === fn(node.nodeValue);
@@ -30,11 +33,11 @@ function init(node, fn) {
 	observer.observe(node, { childList: true, subtree: true });
 }
 
-// <noscript> kinda sussy, is it still #text if it's actually used
-const ignored = ["STYLE", "CODE", "PRE", "SCRIPT", "INPUT", "TEXTARE"];
+// <noscript> kinda sussy, is it still #text if it's actually used?
+const ignored = ["STYLE", "CODE", "PRE", "SCRIPT", "INPUT", "TEXTAREA"];
 
 function walkTextNodes(node) {
-	console.log("walking", node);
+	console.debug("Walking %o...", node);
 
 	const walker = document.createTreeWalker(
 		node,
@@ -63,6 +66,7 @@ function walkTextNodes(node) {
 		currentNode = walker.nextNode();
 	}
 
+	console.debug("found nodes: %o", nodeList);
 	return nodeList;
 }
 
