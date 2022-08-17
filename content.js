@@ -25,8 +25,8 @@ function init(node, fn) {
 		}
 	});
 
-	// NOTE: should we also subscribe to characterData? it doesn't
-	//       matter for document but for other elements it might
+	// TODO: should we also subscribe to characterData? it doesn't
+	//       matter when subscribing to document but for other elements it might
 	observer.observe(node, { childList: true, subtree: true });
 }
 
@@ -53,9 +53,8 @@ function walkTextNodes(node) {
 		false,
 	);
 
-	// walker.nextNode() skips the first child (as opposed to initializing with
-	// walker.currentNode. this is on purpose as walkTextNodes will be called with document,
-	// which doesn't satisfy accepNode(). therefore, we must skip it since it will be null
+	// walker.currentNode starts out as the root node (not checked by acceptNode)
+	// hence we skip one
 	const nodeList = [];
 	let currentNode = walker.nextNode();
 
@@ -78,55 +77,6 @@ function hasIgnoredParentsOrShouldBeIgnored(node) {
 	return false;
 }
 
-/////////////// UWU ///////////////
-
-const replacements = [
-	[/(?:r|l)/gi,         "w"],
-	[/n([aeiou ])/g,      "ny$1"],
-	[/\byou'we\b/gi,      "ur"],
-	[/\byouwe\b/gi,       "ur"],
-	[/\bfuck\b/gi,        "fwickk"],
-	[/\bshit\b/gi,        "poopoo"],
-	[/\bbitch\b/gi,       "meanie"],
-	[/\basshole\b/gi,     "b-butthole"],
-	[/\bdick|penyis\b/gi, "peenie"],
-	[/\bcum\b/gi,         "cummies"],
-	[/\bsemen\b/gi,       "cummies"],
-	[/\bass\b/gi,         "boi pussy"],
-	[/\bdad\b/gi,         "daddy"],
-	[/\bfather\b/gi,      "daddy"],
-	[/ove\b/g,            "uv"],
-	[/(?<=\p{w})\!+/gi, () => random(faces.joy)],
-	[/(?<=\p{w})\?+/gi, () => random(faces.confused)],
-	[/(?<=\p{w})\,+/gi, () => random(faces.embarassed)],
-	[/(?<=\p{w})\.+/gi, () => random(faces.sparkles)],
-	[/\b(\p{w})/gi, (_, m) => (Math.random() < 0.05 ? `${m}-${m}` : m)],
-];
-
-const faces = {
-	sparkles:   [ " (・`ω´・)", " owo", " UwU", " >w<", " ^w^", "☆*:・ﾟ", "〜☆ ", " uguu.., ", " -.-"   ],
-	joy:        [ "!!!", " (* ^ ω ^)", " (o^▽^o)", " (≧◡≦)", ' ☆⌒ヽ(*"､^*)chu', " ( ˘⌣˘)♡(˘⌣˘ )", " xD" ],
-	embarassed: [ " (⁄ ⁄>⁄ ▽ ⁄<⁄ ⁄)..", " (*^.^*)..,", "..,", ",,,", "... ", ".. ", " mmm..", " O.o",   ],
-	confused:   [" (o_O)?", " (°ロ°) !?", " (ーー;)?", " owo?", " ;;w;;"                                ],
-};
-
-function random(arr) {
-	return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function uwuify(text) {
-	text = text.toLowerCase();
-
-	for (const [from, to] of replacements)
-		text = text.replace(from, to);
-
-	return text;
-}
-
 /////////////// INIT ///////////////
 
-// ignore sites with "lang" explicitly set to something other than EN
-// most sites don't set it, which is bad, but whatever
-const { lang } = document.documentElement;
-if (lang?.startsWith("en") || !lang)
-	init(document, uwuify);
+init(document, s => s.toUpperCase());
