@@ -34,7 +34,7 @@ function init(node, fn) {
 }
 
 // <noscript> kinda sussy, is it still #text if it's actually used?
-const ignored = ["STYLE", "CODE", "PRE", "SCRIPT", "INPUT", "TEXTAREA"];
+const ignored = ["STYLE", "CODE", "PRE", "SCRIPT", "INPUT", "TEXTAREA", "KBD", "SAMP", "VAR", "TT"];
 
 function walkTextNodes(node) {
 	console.debug("Walking %o...", node);
