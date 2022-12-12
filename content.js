@@ -14,15 +14,19 @@ function init(node, fn) {
 				continue;
 
 			for (const node of mutation.addedNodes) {
+				console.debug("Mutation added node: %o", node);
+
 				if (hasIgnoredParentsOrShouldBeIgnored(node)) {
-					console.debug("has ignored parent: %o", node);
+					console.debug("Ignored: %o", node);
 					continue;
 				}
 
 				if (node.nodeType === Node.TEXT_NODE) {
+					console.debug("%s => %s", node.nodeValue, fn(node.nodeValue));
 					node.nodeValue = fn(node.nodeValue);
 				} else {
 					for (const childNode of walkTextNodes(node)) {
+						console.debug("%s => %s", childNode.nodeValue, fn(childNode.nodeValue));
 						childNode.nodeValue = fn(childNode.nodeValue);
 					}
 				}
