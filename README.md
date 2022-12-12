@@ -9,8 +9,7 @@ This extension uwuifies the web. It's way harder than it seems.
 * Fix post titles on Reddit. The first few titles are loaded in a weird way.
   They are initally translated but then they're set back again. This is
   probably the reactive framework hydrating the DOM.
-* Fix the title on soundcloud. It appears to be setting `document.title`. We
-  most likely need to install a proxy.
+* Remove CSS properties that modify the appearence of text content (e.g. `text-transform`)?
 * actual testing. for example:
 
   * Inserting a normal node
