@@ -19,11 +19,13 @@ function init(node, fn) {
 					continue;
 				}
 
-				if (node.nodeType === Node.TEXT_NODE)
-					node.nodeValue === fn(node.nodeValue);
-				else
-					for (const childNode of walkTextNodes(node))
+				if (node.nodeType === Node.TEXT_NODE) {
+					node.nodeValue = fn(node.nodeValue);
+				} else {
+					for (const childNode of walkTextNodes(node)) {
 						childNode.nodeValue = fn(childNode.nodeValue);
+					}
+				}
 			}
 		}
 	});
