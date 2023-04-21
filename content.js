@@ -8,35 +8,49 @@ function init(node, fn) {
 		child.nodeValue = fn(child.nodeValue);
 
 	// create observer
+	const config = {
+		characterData: true,
+		characterDataOldValue: true,
+		childList: true,
+		subtree: true,
+	};
 	const observer = new MutationObserver((mutationList) => {
+		observer.disconnect();
+
 		for (const mutation of mutationList) {
-			if (!mutation.addedNodes)
-				continue;
-
-			for (const node of mutation.addedNodes) {
-				console.debug("Mutation added node: %o", node);
-
-				if (hasIgnoredParentsOrShouldBeIgnored(node)) {
-					console.debug("Ignored: %o", node);
-					continue;
-				}
-
-				if (node.nodeType === Node.TEXT_NODE) {
-					console.debug("%s => %s", node.nodeValue, fn(node.nodeValue));
-					node.nodeValue = fn(node.nodeValue);
-				} else {
-					for (const childNode of walkTextNodes(node)) {
-						console.debug("%s => %s", childNode.nodeValue, fn(childNode.nodeValue));
-						childNode.nodeValue = fn(childNode.nodeValue);
-					}
+			if (mutation.type == "characterData") {
+				nodeWasAddedOrUpdated(mutation.target, fn);
+			} else {
+				for (const node of mutation.addedNodes) {
+					console.debug("Mutation added node: %o", node);
+					nodeWasAddedOrUpdated(node, fn);
 				}
 			}
 		}
+
+		observer.observe(node, config);
 	});
 
 	// TODO: should we also subscribe to characterData? it doesn't
 	//       matter when subscribing to document but for other elements it might
-	observer.observe(node, { childList: true, subtree: true });
+	observer.observe(node, config);
+}
+
+function nodeWasAddedOrUpdated(node, fn) {
+	if (hasIgnoredParentsOrShouldBeIgnored(node)) {
+		console.debug("Ignored: %o", node);
+		return;
+	}
+
+	if (node.nodeType === Node.TEXT_NODE) {
+		console.debug("%s => %s", node.nodeValue, fn(node.nodeValue));
+		node.nodeValue = fn(node.nodeValue);
+	} else {
+		for (const childNode of walkTextNodes(node)) {
+			console.debug("%s => %s", childNode.nodeValue, fn(childNode.nodeValue));
+			childNode.nodeValue = fn(childNode.nodeValue);
+		}
+	}
 }
 
 // <noscript> kinda sussy, is it still #text if it's actually used?
