@@ -1,12 +1,13 @@
 function init(node, fn) {
-	console.debug("Starting initial run");
-
 	// Do an initial scan of the DOM, translating everything. We don't call
 	// `handleNewOrUpdatedNode` as it would do a lot of unnecessary work,
 	// only to arrive at this very same line.
+	console.group("Initial run of the DOM");
 	for (const child of walkTextNodes(node)) {
+		console.assert(child.nodeType === Node.TEXT_NODE, "Expected text node, got %o", child);
 		child.nodeValue = fn(child.nodeValue);
 	}
+	console.groupEnd();
 
 	const observerConfig = {
 		characterData: true, // Modifications to the textual content of a node.
@@ -17,6 +18,8 @@ function init(node, fn) {
 	// Create a new `MutationObserver`. This will react to changes in the
 	// DOM and update nodes appropriately.
 	const observer = new MutationObserver((mutationList) => {
+		console.group("Handling mutations: %o", mutationList);
+
 		// TODO: Is this entirely sound? I haven't thought too deeply about this.
 		// TODO: What is the performance impact of all this dis-/connecting?
 		// We have to disconnect it here, to avoid being notified of
@@ -28,12 +31,15 @@ function init(node, fn) {
 			if (mutation.type == "characterData") {
 				handleNewOrUpdatedNode(mutation.target, fn);
 			} else {
+				console.assert(mutation.type == "childList");
 				for (const node of mutation.addedNodes) {
+					console.debug("Mutation added node: %o", node);
 					handleNewOrUpdatedNode(node, fn);
 				}
 			}
 		}
 
+		console.groupEnd();
 		observer.observe(node, observerConfig);
 	});
 
@@ -102,7 +108,7 @@ function walkTextNodes(node) {
 		currentNode = walker.nextNode();
 	}
 
-	console.debug("found nodes: %o", nodeList);
+	console.debug("Found nodes: %o", nodeList);
 	return nodeList;
 }
 
