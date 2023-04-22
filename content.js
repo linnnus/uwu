@@ -1,3 +1,7 @@
+/*
+ * Generic text replacement.
+ */
+
 function init(node, fn) {
 	// Do an initial scan of the DOM, translating everything. We don't call
 	// `handleNewOrUpdatedNode` as it would do a lot of unnecessary work,
@@ -123,4 +127,61 @@ function hasIgnoredParentsOrShouldBeIgnored(node) {
 	return false;
 }
 
-init(document, s => s.toUpperCase());
+/*
+ * Uwuification
+ */
+
+const replacements = [
+	[/(?:r|l)/gi,         "w"],
+	[/n([aeiou ])/g,      "ny$1"],
+	[/\byou'we\b/gi,      "ur"],
+	[/\byouwe\b/gi,       "ur"],
+	[/\bfuck\b/gi,        "fwickk"],
+	[/\bshit\b/gi,        "poopoo"],
+	[/\bbitch\b/gi,       "meanie"],
+	[/\basshole\b/gi,     "b-butthole"],
+	[/\bdick|penyis\b/gi, "peenie"],
+	[/\bcum\b/gi,         "cummies"],
+	[/\bsemen\b/gi,       "cummies"],
+	[/\bass\b/gi,         "boi pussy"],
+	[/\bdad\b/gi,         "daddy"],
+	[/\bfather\b/gi,      "daddy"],
+	[/ove\b/g,            "uv"],
+	[/(?<=\p{w})\!+/gi, () => random(faces.joy)],
+	[/(?<=\p{w})\?+/gi, () => random(faces.confused)],
+	[/(?<=\p{w})\,+/gi, () => random(faces.embarassed)],
+	[/(?<=\p{w})\.+/gi, () => random(faces.sparkles)],
+	[/\b(\p{w})/gi, (_, m) => (Math.random() < 0.05 ? `${m}-${m}` : m)],
+];
+
+const faces = {
+	sparkles:   [ " (・`ω´・)", " owo", " UwU", " >w<", " ^w^", "☆*:・ﾟ", "〜☆ ", " uguu.., ", " -.-"   ],
+	joy:        [ "!!!", " (* ^ ω ^)", " (o^▽^o)", " (≧◡≦)", ' ☆⌒ヽ(*"､^*)chu', " ( ˘⌣˘)♡(˘⌣˘ )", " xD" ],
+	embarassed: [ " (⁄ ⁄>⁄ ▽ ⁄<⁄ ⁄)..", " (*^.^*)..,", "..,", ",,,", "... ", ".. ", " mmm..", " O.o",   ],
+	confused:   [" (o_O)?", " (°ロ°) !?", " (ーー;)?", " owo?", " ;;w;;"                                ],
+};
+
+function random(arr) {
+	return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function uwuify(text) {
+	text = text.toLowerCase();
+
+	for (const [from, to] of replacements)
+		text = text.replace(from, to);
+
+	return text;
+}
+
+/*
+ * Entry point
+ */
+
+// Ignore sites with "lang" explicitly set to something other than EN. Most
+// sites don't set it, which is bad, but whatever lets just assume they're in
+// English.
+const { lang } = document.documentElement;
+if (lang?.startsWith("en") || !lang) {
+	init(document, uwuify);
+}
