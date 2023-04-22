@@ -1,42 +1,46 @@
-/////////////// REPLACEMENTS ///////////////
-
 function init(node, fn) {
 	console.debug("Starting initial run");
 
-	// initial run
-	for (const child of walkTextNodes(node))
+	// Do an initial scan of the DOM, translating everything. We don't call
+	// `handleNewOrUpdatedNode` as it would do a lot of unnecessary work,
+	// only to arrive at this very same line.
+	for (const child of walkTextNodes(node)) {
 		child.nodeValue = fn(child.nodeValue);
+	}
 
-	// create observer
-	const config = {
-		characterData: true,
-		characterDataOldValue: true,
-		childList: true,
-		subtree: true,
+	const observerConfig = {
+		characterData: true, // Modifications to the textual content of a node.
+		childList: true,     // Adding/removing child nodes.
+		subtree: true,       // These should be propagated to child nodes.
 	};
+
+	// Create a new `MutationObserver`. This will react to changes in the
+	// DOM and update nodes appropriately.
 	const observer = new MutationObserver((mutationList) => {
+		// TODO: Is this entirely sound? I haven't thought too deeply about this.
+		// TODO: What is the performance impact of all this dis-/connecting?
+		// We have to disconnect it here, to avoid being notified of
+		// our own changes and recursing infinitely. We reconnect at
+		// the end of this function.
 		observer.disconnect();
 
 		for (const mutation of mutationList) {
 			if (mutation.type == "characterData") {
-				nodeWasAddedOrUpdated(mutation.target, fn);
+				handleNewOrUpdatedNode(mutation.target, fn);
 			} else {
 				for (const node of mutation.addedNodes) {
-					console.debug("Mutation added node: %o", node);
-					nodeWasAddedOrUpdated(node, fn);
+					handleNewOrUpdatedNode(node, fn);
 				}
 			}
 		}
 
-		observer.observe(node, config);
+		observer.observe(node, observerConfig);
 	});
 
-	// TODO: should we also subscribe to characterData? it doesn't
-	//       matter when subscribing to document but for other elements it might
-	observer.observe(node, config);
+	observer.observe(node, observerConfig);
 }
 
-function nodeWasAddedOrUpdated(node, fn) {
+function handleNewOrUpdatedNode(node, fn) {
 	if (hasIgnoredParentsOrShouldBeIgnored(node)) {
 		console.debug("Ignored: %o", node);
 		return;
@@ -53,8 +57,20 @@ function nodeWasAddedOrUpdated(node, fn) {
 	}
 }
 
-// <noscript> kinda sussy, is it still #text if it's actually used?
-const ignored = ["STYLE", "CODE", "PRE", "SCRIPT", "INPUT", "TEXTAREA", "KBD", "SAMP", "VAR", "TT"];
+// This is a list of tag names that should be ignored – changing the contents
+// of these would break the web in some way or another.
+const ignored = [
+	"STYLE",
+	"CODE",
+	"PRE",
+	"SCRIPT",
+	"INPUT",
+	"TEXTAREA",
+	"KBD",
+	"SAMP",
+	"VAR",
+	"TT",
+];
 
 function walkTextNodes(node) {
 	console.debug("Walking %o...", node);
@@ -100,7 +116,5 @@ function hasIgnoredParentsOrShouldBeIgnored(node) {
 
 	return false;
 }
-
-/////////////// INIT ///////////////
 
 init(document, s => s.toUpperCase());
