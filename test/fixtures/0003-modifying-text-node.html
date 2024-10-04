@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+			setTimeout(() => {
+				const target = document.getElementById("test-target");
+				const textNode = target.childNodes[0];
+				textNode.nodeValue = "This message was dynamically added";
+			}, 500);
+		</script>
+	</head>
+	<body>
+		<p id="test-target">This is a static page which is dynamically updated.</p>
+	</body>
+</html>

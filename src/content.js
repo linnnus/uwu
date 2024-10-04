@@ -178,10 +178,15 @@ function uwuify(text) {
  * Entry point
  */
 
+// When run under puppeteer during testing, it is much simpler to just test
+// if a string is upper case, than whether it has been uwuified, since
+// uwuification is non-deterministic.
+const mapping = navigator.webdriver ? (s => s.toUpperCase()) : uwuify;
+
 // Ignore sites with "lang" explicitly set to something other than EN. Most
 // sites don't set it, which is bad, but whatever lets just assume they're in
 // English.
 const { lang } = document.documentElement;
 if (lang?.startsWith("en") || !lang) {
-	init(document, uwuify);
+	init(document, mapping);
 }

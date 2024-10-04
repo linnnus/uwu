@@ -1,0 +1,5 @@
+{
+	"tasks": {
+		"test": "deno test --allow-env=DEBUG,HOME,TMPDIR --allow-net=googlechromelabs.github.io:443,127.0.0.1,0.0.0.0 --allow-read --allow-write=\"$TMPDIR\" --allow-run"
+	}
+}
