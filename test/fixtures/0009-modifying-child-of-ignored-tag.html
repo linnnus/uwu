@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+			setTimeout(() => {
+				const target = document.getElementById("modification-target");
+				target.textContent += " even though it's dynamically updated";
+			}, 500);
+		</script>
+	</head>
+	<body>
+		<p id="test-target">This should be uppercased, but <code><span id="modification-target">this should not be</span></code>.</p>
+	</body>
+</html>

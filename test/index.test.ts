@@ -1,7 +1,7 @@
 import { launch, type Page } from "jsr:@astral/astral"; //=;
 import { serveDir } from "jsr:@std/http/file-server";
 import { waitForDomToSettle } from "./utils/dom.ts";
-import { assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "jsr:@std/assert";
 import { assertUpperCase, assertStringIncludes } from "./utils/assert.ts";
 
 const EXTENSION_PATH = new URL("../src", import.meta.url).pathname;
@@ -15,6 +15,7 @@ function test(fixture: string, check: (page: Page) => Promise<void> | void) {
 		sanitizeOps: false,
 
 		async fn() {
+			// FIXME: There's no reason to start a browser instance per test, except that I can't figure out how to do global setup/teardown with Deno's testing framework.
 			const browser = await launch({
 				headless: false,
 				args: [
@@ -40,10 +41,10 @@ function test(fixture: string, check: (page: Page) => Promise<void> | void) {
 
 			try {
 				await check(page);
-			} catch (e) {
+			} /*catch (e) {
 				console.error(e);
 				throw e;
-			} finally {
+			} */finally {
 				await browser.close();
 				await server.shutdown();
 			}
@@ -75,16 +76,43 @@ test("0003-modifying-text-node.html", async (page) => {
 	await waitForDomToSettle(page, 1000);
 	const textContent = await getTextContent(page, "#test-target");
 	assertUpperCase(textContent);
-	assertStringIncludes(textContent, "DYNAMICALLY ADDED", "Dynamic update was not run");
+	assertStringIncludes(textContent, "DYNAMICALLY UPDATED", "Dynamic update was not run");
 });
 
-test("0004-ignored-tag.html", async (page) => {
+test("0004-static-ignored-tag.html", async (page) => {
 	const textContent = await getTextContent(page, "#test-target");
-	console.log(textContent);
+	assertEquals(textContent, "THIS SHOULD BE UPPERCASED, BUT this should not be.");
+});
+
+test("0005-inserting-ignored-tag.html", async (page) => {
+	await waitForDomToSettle(page, 1000);
+	const textContent = await getTextContent(page, "#test-target");
+	assertEquals(textContent, "This should not be modified");
+});
+
+test("0006-modifying-ignored-tag.html", async (page) => {
+	await waitForDomToSettle(page, 1000);
+	const textContent = await getTextContent(page, "#test-target");
+	assertEquals(textContent, "THIS SHOULD BE UPPERCASED, BUT this should not be even though it's dynamically updated.");
+});
+
+test("0007-appending-child-to-ignored-tag.html", async (page) => {
+	await waitForDomToSettle(page, 1000);
+	const textContent = await getTextContent(page, "#test-target");
+	assertEquals(textContent, "THIS SHOULD BE UPPERCASED, BUT this should not be and neither should this child node.");
+});
+
+test("0008-appending-text-node-to-ignored-tag.html", async (page) => {
+	await waitForDomToSettle(page, 1000);
+	const textContent = await getTextContent(page, "#test-target");
+	assertEquals(textContent, "THIS SHOULD BE UPPERCASED, BUT this should not be and neither should this text node.");
+});
+
+test("0009-modifying-child-of-ignored-tag.html", async (page) => {
+	await waitForDomToSettle(page, 1000);
+	const textContent = await getTextContent(page, "#test-target");
+	assertEquals(textContent, "THIS SHOULD BE UPPERCASED, BUT this should not be even though it's dynamically updated.");
 });
 
 // TODO:
-//  Inserting a `<code>` (or some other ignored element)
-//  Appending a child to a `<code>`
-//  Inserting a text node under a `<code>`
 //  Modifying a childnode of a `<code>`

@@ -106,5 +106,14 @@
       }
     }
   },
-  "remote": {}
+  "redirects": {
+    "https://deno.land/x/xml": "https://deno.land/x/xml@6.0.0",
+    "https://deno.land/x/xml/mod.ts": "https://deno.land/x/xml@6.0.0/mod.ts"
+  },
+  "remote": {
+    "https://deno.land/x/xml@6.0.0/mod.ts": "b59e5c0dd9fe7ed597c21c39aacf089aa82fe5c5eaad3f411a43a9c104359f4e",
+    "https://deno.land/x/xml@6.0.0/parse.ts": "84f0e4c0f06bef3de94700ae7a3be62330c67726b403586c0662df99be38ff64",
+    "https://deno.land/x/xml@6.0.0/stringify.ts": "14c90b6826624fcaee097a4be8078fd002cddc189b051f7fac92a52dabedea19",
+    "https://deno.land/x/xml@6.0.0/wasm_xml_parser/wasm_xml_parser.js": "7f6b80616f0b5488a40771ed76ebe61cedf9473bf86320da5e8aa0deec22db51"
+  }
 }

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+			setTimeout(() => {
+				const modificationTarget = document.getElementById("modification-target");
+				const newElement = document.createElement("span"); // This is notably NOT an ignored element.
+				newElement.textContent = " and neither should this child node";
+				modificationTarget.appendChild(newElement);
+			}, 500);
+		</script>
+	</head>
+	<body>
+		<p id="test-target">This should be uppercased, but <code id="modification-target">this should not be</code>.</p>
+	</body>
+</html>

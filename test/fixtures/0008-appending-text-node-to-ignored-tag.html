@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+			setTimeout(() => {
+				const modificationTarget = document.getElementById("modification-target");
+				const newNode = document.createTextNode(" and neither should this text node");
+				modificationTarget.append(newNode);
+			}, 500);
+		</script>
+	</head>
+	<body>
+		<p id="test-target">This should be uppercased, but <code id="modification-target">this should not be</code>.</p>
+	</body>
+</html>

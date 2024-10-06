@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+			setTimeout(() => {
+				const ignoredElement = document.createElement("var");
+				ignoredElement.setAttribute("id", "test-target");
+				ignoredElement.textContent = "This should not be modified";
+				document.body.appendChild(ignoredElement);
+			}, 500);
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
