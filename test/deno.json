@@ -1,5 +1,6 @@
 {
 	"tasks": {
-		"test": "deno test --allow-env=DEBUG,HOME,TMPDIR --allow-net=googlechromelabs.github.io:443,127.0.0.1,0.0.0.0 --allow-read --allow-write=\"$TMPDIR\" --allow-run"
+		"test": "deno test --allow-env --allow-net=storage.googleapis.com,googlechromelabs.github.io:443,127.0.0.1,0.0.0.0 --allow-read --allow-write=\"$TMPDIR\" --allow-run",
+		"test-ci": "TEST_HEADLESS=1 deno test --allow-net=storage.googleapis.com,googlechromelabs.github.io:443,127.0.0.1,0.0.0.0 --allow-env --allow-read --allow-write --allow-run --reporter=junit --junit-path=./report.xml"
 	}
 }

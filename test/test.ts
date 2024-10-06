@@ -17,7 +17,7 @@ function test(fixture: string, check: (page: Page) => Promise<void> | void) {
 		async fn() {
 			// FIXME: There's no reason to start a browser instance per test, except that I can't figure out how to do global setup/teardown with Deno's testing framework.
 			const browser = await launch({
-				headless: false,
+				headless: Deno.env.has("TEST_HEADLESS"),
 				args: [
 					`--disable-extensions-except=${EXTENSION_PATH}`,
 					`--load-extension=${EXTENSION_PATH}`
