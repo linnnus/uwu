@@ -32,3 +32,4 @@ See [their documentation][web-ext-run] for more info.
 * Edit user-visible attributes like `placeholder="..."` and `label`
 * Fix github (need to match on class)
 * Remove CSS properties that modify the appearence of text content (e.g. `text-transform`)?
+* Check `[lang]` on sub-elements as well, not just the root element. For example, an English page could contain a quote in French.
