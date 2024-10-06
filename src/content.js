@@ -146,6 +146,8 @@ const replacements = [
 	[/\bass\b/gi,         "boi pussy"],
 	[/\bdad\b/gi,         "daddy"],
 	[/\bfather\b/gi,      "daddy"],
+	[/\bmom\b/gi,         "mommy"],
+	[/\bmother\b/gi,      "mommy"],
 	[/ove\b/g,            "uv"],
 	[/(?<=\p{w})\!+/gi, () => random(faces.joy)],
 	[/(?<=\p{w})\?+/gi, () => random(faces.confused)],
