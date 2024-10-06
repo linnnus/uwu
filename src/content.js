@@ -133,7 +133,7 @@ function hasIgnoredParentsOrShouldBeIgnored(node) {
 
 const replacements = [
 	[/(?:r|l)/gi,         "w"],
-	[/n([aeiou ])/g,      "ny$1"],
+	[/n([aeiou ])(?!\b)/g, "ny$1"],
 	[/\byou'we\b/gi,      "ur"],
 	[/\byouwe\b/gi,       "ur"],
 	[/\bfuck\b/gi,        "fwickk"],
