@@ -1,7 +1,7 @@
 import { AssertionError } from "jsr:@std/assert";
 
 export function assertUpperCase(actual: string, msg?: string) {
-  if (actual === undefined || actual === null) {
+  if (actual !== actual.toUpperCase()) {
     const msgSuffix = msg ? `: ${msg}` : ".";
     msg = `Expected actual: ${JSON.stringify(actual)} to be uppercase${msgSuffix}`;
     throw new AssertionError(msg);
