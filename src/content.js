@@ -2,15 +2,27 @@
  * Generic text replacement.
  */
 
+// @ts-check
+/// <reference lib="dom"/>
+/// <reference lib="dom.iterable"/>
+
+/**
+ * Applies a text mapping over all user-visible text nodes within `node`.
+ * Whenever `node` or one of its descendants is updated, the mapping will be
+ * applied to the updated value as well.
+ *
+ * The mapping (`fn`) should be a pure function and pretty quick to compute as
+ * it will be called *a lot*.
+ *
+ * @param {Node} node - The root node
+ * @param {(s: string) => string} fn - The mapping to apply to the text
+ */
 function init(node, fn) {
 	// Do an initial scan of the DOM, translating everything. We don't call
 	// `handleNewOrUpdatedNode` as it would do a lot of unnecessary work,
 	// only to arrive at this very same line.
 	console.group("Initial run of the DOM");
-	for (const child of walkTextNodes(node)) {
-		console.assert(child.nodeType === Node.TEXT_NODE, "Expected text node, got %o", child);
-		child.nodeValue = fn(child.nodeValue);
-	}
+	applyMapping(node, fn);
 	console.groupEnd();
 
 	const observerConfig = {
@@ -33,7 +45,8 @@ function init(node, fn) {
 
 		for (const mutation of mutationList) {
 			if (mutation.type == "characterData") {
-				handleNewOrUpdatedNode(mutation.target, fn);
+				const target = /** @type {CharacterData} */ (mutation.target);
+				handleNewOrUpdatedNode(target, fn);
 			} else {
 				console.assert(mutation.type == "childList");
 				for (const node of mutation.addedNodes) {
@@ -50,20 +63,45 @@ function init(node, fn) {
 	observer.observe(node, observerConfig);
 }
 
+/**
+ * Same as {@link applyMapping}, except it first checks whether the mapping
+ * should be applied to {@link node}, i.e. whether {@link node} is itself
+ * an ignored element or a descendant of one.
+ *
+ * @param {Node} node - The root node
+ * @param {(s: string) => string} fn - The mapping to apply to the text
+ */
 function handleNewOrUpdatedNode(node, fn) {
-	if (hasIgnoredParentsOrShouldBeIgnored(node)) {
-		console.debug("Ignored: %o", node);
-		return;
+	let iter = /** @type {Node | null} */ (node);
+	while (iter) {
+		if (isElementNode(iter) && ignored.includes(iter.tagName.toUpperCase())) {
+			console.debug("Ignored: %o", node);
+			return;
+		}
+
+		iter = iter.parentElement;
 	}
 
-	if (node.nodeType === Node.TEXT_NODE) {
-		console.debug("%s => %s", node.nodeValue, fn(node.nodeValue));
-		node.nodeValue = fn(node.nodeValue);
-	} else {
+	applyMapping(node, fn);
+}
+
+/**
+ * Applies the mapping function `fn` non-recursively to `node`.
+ *
+ * @param {Node} node - The root node
+ * @param {(s: string) => string} fn - The mapping to apply to the text
+ */
+function applyMapping(node, fn) {
+	if (isTextNode(node)) {
+		console.debug("%s => %s", node.nodeValue, fn(node.data));
+		node.nodeValue = fn(node.data);
+	} else if (isElementNode(node)) {
 		for (const childNode of walkTextNodes(node)) {
-			console.debug("%s => %s", childNode.nodeValue, fn(childNode.nodeValue));
-			childNode.nodeValue = fn(childNode.nodeValue);
+			console.debug("%s => %s", childNode.nodeValue, fn(childNode.data));
+			childNode.nodeValue = fn(childNode.data);
 		}
+	} else {
+		console.error("Unhanded node type: ", node.nodeType);
 	}
 }
 
@@ -82,6 +120,12 @@ const ignored = [
 	"TT",
 ];
 
+/**
+ * Finds all text nodes within {@link node} which should be mapped.
+ *
+ * @param {Node} node
+ * @returns {Text[]} Array of non-ignored text nodes contained within {@link node}.
+ */
 function walkTextNodes(node) {
 	console.debug("Walking %o...", node);
 
@@ -91,7 +135,8 @@ function walkTextNodes(node) {
 		{
 			 acceptNode(node) {
 				if (node.nodeType === Node.ELEMENT_NODE) {
-					return ignored.includes(node.tagName.toUpperCase())
+					const element = /** @type {Element} */ (node);
+					return ignored.includes(element.tagName.toUpperCase())
 						? NodeFilter.FILTER_REJECT
 						: NodeFilter.FILTER_SKIP;
 				 } else {
@@ -99,7 +144,6 @@ function walkTextNodes(node) {
 				 }
 			}
 		},
-		false,
 	);
 
 	// walker.currentNode starts out as the root node (not checked by acceptNode)
@@ -108,6 +152,7 @@ function walkTextNodes(node) {
 	let currentNode = walker.nextNode();
 
 	while(currentNode) {
+		assert(isTextNode(currentNode));
 		nodeList.push(currentNode);
 		currentNode = walker.nextNode();
 	}
@@ -116,21 +161,47 @@ function walkTextNodes(node) {
 	return nodeList;
 }
 
-function hasIgnoredParentsOrShouldBeIgnored(node) {
-	while (node) {
-		if (node.tagName && ignored.includes(node.tagName.toUpperCase()))
-			return true;
+/**
+ * Checks whether {@link node} is a text node.
+ *
+ * This helper function exists mainly to help the type checker
+ * understand the downcasting based on {@link Node.nodeType}.
+ *
+ * @param {Node} node The node to check
+ * @returns {node is Text} Boolean indicathing whether {@link node} is a text node
+ */
+function isTextNode(node) {
+	return node.nodeType === Node.TEXT_NODE;
+}
 
-		node = node.parentNode;
+/**
+ * Checks whether {@link node} is an element node.
+ *
+ * This helper function exists mainly to help the type checker
+ * understand the downcasting based on {@link Node.nodeType}.
+ *
+ * @param {Node} node The node to check
+ * @returns {node is Element} Boolean indicathing whether {@link node} is a text node
+ */
+function isElementNode(node) {
+	return node.nodeType === Node.ELEMENT_NODE;
+}
+
+/**
+ * @param {boolean} cond
+ * @returns {asserts cond}
+ */
+function assert(cond, message = "Assertion failed") {
+	if (!cond) {
+		throw new Error(message);
 	}
-
-	return false;
 }
 
 /*
  * Uwuification
  */
 
+/** @type {[RegExp, string | ((match: string, ...captures: string[]) => string)][]} */
 const replacements = [
 	[/(?:r|l)/gi,         "w"],
 	[/n([aeiou ])(?!\b)/g, "ny$1"],
@@ -149,11 +220,11 @@ const replacements = [
 	[/\bmom\b/gi,         "mommy"],
 	[/\bmother\b/gi,      "mommy"],
 	[/ove\b/g,            "uv"],
-	[/(?<=\p{w})\!+/gi, () => random(faces.joy)],
-	[/(?<=\p{w})\?+/gi, () => random(faces.confused)],
-	[/(?<=\p{w})\,+/gi, () => random(faces.embarassed)],
-	[/(?<=\p{w})\.+/gi, () => random(faces.sparkles)],
-	[/\b(\p{w})/gi, (_, m) => (Math.random() < 0.05 ? `${m}-${m}` : m)],
+	[/(?<=\w)!+/giv,   () => random(faces.joy)],
+	[/(?<=\w)\?+/giv,  () => random(faces.confused)],
+	[/(?<=\w),+/giv,   () => random(faces.embarassed)],
+	[/(?<=\w)\.+/giv,  () => random(faces.sparkles)],
+	[/\b(\w)/giv,     (_, m) => (Math.random() < 0.05 ? `${m}-${m}` : m)],
 ];
 
 const faces = {
@@ -163,15 +234,31 @@ const faces = {
 	confused:   [" (o_O)?", " (°ロ°) !?", " (ーー;)?", " owo?", " ;;w;;"                                ],
 };
 
+/**
+ * Select a random element from an array.
+ *
+ * @template T
+ * @param {T[]} arr The array to choose from.
+ * @returns {T} A random element.
+ */
 function random(arr) {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
 
+/**
+ * Transform text to be uwu-speak.
+ *
+ * @param {string} text The normal text
+ * @returns {string} Uwuified text
+ */
 function uwuify(text) {
 	text = text.toLowerCase();
 
-	for (const [from, to] of replacements)
+	for (const [from, to] of replacements) {
+		// @ts-ignore TypeScript can't match union types against overloads properly.
+		// See: https://github.com/microsoft/TypeScript/issues/32164
 		text = text.replace(from, to);
+	}
 
 	return text;
 }
@@ -183,12 +270,14 @@ function uwuify(text) {
 // When run under puppeteer during testing, it is much simpler to just test
 // if a string is upper case, than whether it has been uwuified, since
 // uwuification is non-deterministic.
-const mapping = navigator.webdriver ? (s => s.toUpperCase()) : uwuify;
+const mapping = navigator.webdriver
+	? /** @type{(s: string) => string} */ (s => s.toUpperCase())
+	: uwuify;
 
 // Ignore sites with "lang" explicitly set to something other than EN. Most
 // sites don't set it, which is bad, but whatever lets just assume they're in
 // English.
 const { lang } = document.documentElement;
 if (lang?.startsWith("en") || !lang) {
-	init(document, mapping);
+	init(document.documentElement, mapping);
 }
